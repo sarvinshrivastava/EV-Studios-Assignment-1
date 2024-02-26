@@ -5,7 +5,6 @@ using System.Collections;
 public class BallMovement : MonoBehaviour {
     [SerializeField] float jumpForce = 5f;
     [SerializeField] float moveSpeed = 3f;
-    [SerializeField] float disappearanceDuration = 2f;
 
     private Rigidbody2D rb;
     private bool canJump;
@@ -14,8 +13,11 @@ public class BallMovement : MonoBehaviour {
     private const float doubleTapTime = 0.2f;
     private const float jumpDelay = 0.3f; // Make sure this is longer than doubleTapTime
 
+    private BallManager ballManager; // Reference to the BallManager script
+
     void Start() {
         rb = GetComponent<Rigidbody2D>();
+        ballManager = FindObjectOfType<BallManager>(); // Find the BallManager script in the scene
     }
 
     void Update() {
@@ -29,10 +31,11 @@ public class BallMovement : MonoBehaviour {
                 if (firstTapTime == 0f) {
                     firstTapTime = Time.time;
                 } else if (Time.time - firstTapTime < doubleTapTime) {
-                    StartCoroutine(DisappearAndReappear());
+                    ballManager.DisappearAndReappear(); // Call the DisappearAndReappear method in the BallManager script
                     firstTapTime = 0f;
                 } else {
                     firstTapTime = Time.time;
+                    StartCoroutine(JumpAfterDelay(jumpDelay)); // Add the jump functionality back
                 }
             }
         }
@@ -58,28 +61,14 @@ public class BallMovement : MonoBehaviour {
         transform.position = Camera.main.ViewportToWorldPoint(position);
     }
 
-    IEnumerator DisappearAndReappear(){
-        float timer = disappearanceDuration;
-
-        while (timer > 0f) {
-            yield return new WaitForSeconds(0.1f); 
-            timer -= 0.1f;
-        }
-
-        gameObject.SetActive(false);
-        yield return new WaitForSeconds(1f); 
-        gameObject.SetActive(true);
-        canJump = true; 
+    IEnumerator JumpAfterDelay(float delay) {
+        yield return new WaitForSeconds(delay);
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
     }
 
     IEnumerator MoveAfterDelay(float delay, float velocityX) {
         yield return new WaitForSeconds(delay);
         rb.velocity = new Vector2(velocityX, rb.velocity.y);
-    }
-
-    IEnumerator JumpAfterDelay(float delay) {
-        yield return new WaitForSeconds(delay);
-        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
     }
 
     void OnCollisionEnter2D(Collision2D collision) {
