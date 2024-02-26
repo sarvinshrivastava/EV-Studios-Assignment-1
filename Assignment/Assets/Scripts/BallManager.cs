@@ -1,25 +1,33 @@
-using UnityEngine;
 using System.Collections;
-using TMPro; // Import the TextMeshPro namespace
+using TMPro;
+using UnityEngine;
 
-public class BallManager : MonoBehaviour {
-    [SerializeField] GameObject ball;
-    [SerializeField] float disappearanceDuration = 2f;
-    [SerializeField] TextMeshProUGUI timeText; // Reference to the TextMeshProUGUI element
+public class BallManager : MonoBehaviour
+{
+    [SerializeField] private GameObject ball;
+    [SerializeField] private float disappearanceDuration = 2f;
+    [SerializeField] private TextMeshProUGUI timeText; 
 
-    public void DisappearAndReappear() {
+    // Starts the DisappearAndReappearCoroutine
+    public void DisappearAndReappear()
+    {
         StartCoroutine(DisappearAndReappearCoroutine());
     }
 
-    private IEnumerator DisappearAndReappearCoroutine() {
+    // Coroutine to handle the disappearance and reappearance of the ball
+    private IEnumerator DisappearAndReappearCoroutine()
+    {
         ball.SetActive(false);
         float remainingTime = disappearanceDuration;
-        while (remainingTime > 0) {
-            timeText.text = "Time remaining: " + remainingTime; // Update the TextMeshProUGUI element
+
+        while (remainingTime > 0)
+        {
+            timeText.text = "Time remaining: " + remainingTime; 
             yield return new WaitForSeconds(1f);
             remainingTime--;
         }
+
         ball.SetActive(true);
-        timeText.text = ""; // Clear the TextMeshProUGUI element
+        timeText.text = "";
     }
 }
