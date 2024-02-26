@@ -1,7 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
-using TMPro;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class BallMovement : MonoBehaviour {
@@ -9,37 +7,43 @@ public class BallMovement : MonoBehaviour {
     [SerializeField] float moveSpeed = 3f;
     [SerializeField] float disappearanceDuration = 2f;
 
-    [SerializeField] TextMeshProUGUI timerText;
-
     private Rigidbody2D rb;
-    private bool canJump ;
+    private bool canJump;
+
+    private float firstTapTime = 0f;
+    private const float doubleTapTime = 0.2f;
+    private const float jumpDelay = 0.3f; // Make sure this is longer than doubleTapTime
 
     void Start() {
         rb = GetComponent<Rigidbody2D>();
     }
 
     void Update() {
-        // Check if the ball is tapped
+        // Check if the screen is tapped
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) {
             // Convert the touch position to world space
             Vector2 touchPosition = Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
 
             // Check if the touch position overlaps with the ball's collider
             if (GetComponent<Collider2D>() == Physics2D.OverlapPoint(touchPosition) && canJump) {
-                Debug.Log("Jump");
-                rb.velocity = new Vector2(0, jumpForce);
-                canJump = false;
+                if (firstTapTime == 0f) {
+                    firstTapTime = Time.time;
+                } else if (Time.time - firstTapTime < doubleTapTime) {
+                    StartCoroutine(DisappearAndReappear());
+                    firstTapTime = 0f;
+                } else {
+                    firstTapTime = Time.time;
+                }
             }
         }
-
         // Move left or right
-        if (Input.touchCount > 0 && (Input.GetTouch(0).phase == TouchPhase.Stationary || Input.GetTouch(0).phase == TouchPhase.Moved)) {
+        else if (Input.touchCount > 0 && (Input.GetTouch(0).phase == TouchPhase.Stationary || Input.GetTouch(0).phase == TouchPhase.Moved) && canJump) {
             if (Input.GetTouch(0).position.x < Screen.width / 2) {
                 Debug.Log("Move left");
-                rb.velocity = new Vector2(-moveSpeed, rb.velocity.y);
+                StartCoroutine(MoveAfterDelay(doubleTapTime, -moveSpeed));
             } else {
                 Debug.Log("Move right");
-                rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
+                StartCoroutine(MoveAfterDelay(doubleTapTime, moveSpeed));
             }
         }
 
@@ -58,31 +62,30 @@ public class BallMovement : MonoBehaviour {
         float timer = disappearanceDuration;
 
         while (timer > 0f) {
-            timerText.text = timer.ToString("F1"); 
             yield return new WaitForSeconds(0.1f); 
             timer -= 0.1f;
         }
 
-        timerText.text = "0.0"; 
         gameObject.SetActive(false);
         yield return new WaitForSeconds(1f); 
         gameObject.SetActive(true);
         canJump = true; 
-        timerText.text = "";
+    }
+
+    IEnumerator MoveAfterDelay(float delay, float velocityX) {
+        yield return new WaitForSeconds(delay);
+        rb.velocity = new Vector2(velocityX, rb.velocity.y);
+    }
+
+    IEnumerator JumpAfterDelay(float delay) {
+        yield return new WaitForSeconds(delay);
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
     }
 
     void OnCollisionEnter2D(Collision2D collision) {
         if (collision.gameObject.CompareTag("Ground"))
         {
             canJump = true;
-        }
-    }
-
-    void OnMouseDown() {
-        if (canJump) {
-            Debug.Log("Jump");
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            canJump = false;
         }
     }
 }
