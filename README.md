@@ -44,6 +44,9 @@ This project is currently not licensed under any specific license.
 
 This project was created as part of a round 2 internship selection process.
 
+**Demo Video**
+https://youtube.com/shorts/ZeAIvdN_6vA?feature=share
+
 **Please note:**
 
 * You may need to create a GitHub account and repository if you haven't already.
